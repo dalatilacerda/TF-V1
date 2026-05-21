@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Envio de Ticket - Time</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f0f2f5;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 400px;
+      }
+      h3 {
+        color: #25d366;
+        margin-top: 0;
+      }
+      label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+        color: #555;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #25d366;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 16px;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #1ebd58;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #777;
+        text-decoration: none;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <h3>Painel do Operador</h3>
+      <p>Preencha os dados do cliente para enviar à supervisão.</p>
+
+      <label for="opName">Seu Nome:</label>
+      <input type="text" id="opName" placeholder="Ex: João Silva" />
+
+      <label for="ticketId">ID do Ticket / Link do Blip:</label>
+      <input type="text" id="ticketId" placeholder="Cole o ID ou link aqui" />
+
+      <label for="filaDestino">Fila de Destino:</label>
+      <select id="filaDestino">
+        <option value="Suporte">Suporte Técnico</option>
+        <option value="Financeiro">Financeiro</option>
+        <option value="Comercial">Comercial</option>
+      </select>
+
+      <label for="obs">Observação (Opcional):</label>
+      <textarea
+        id="obs"
+        rows="3"
+        placeholder="Algo que a super precisa saber?"
+      ></textarea>
+
+      <button onclick="enviarParaSuper()">Enviar para a Super</button>
+
+      <a href="index.html" class="back-link">← Voltar para o início</a>
+    </div>
+
+    <script>
+      function enviarParaSuper() {
+        const operador = document.getElementById("opName").value.trim();
+        const ticket = document.getElementById("ticketId").value.trim();
+        const fila = document.getElementById("filaDestino").value;
+        const obs = document.getElementById("obs").value.trim();
+
+        if (!operador || !ticket) {
+          alert("Por favor, preencha seu nome e o ID do ticket!");
+          return;
+        }
+
+        // 1. Cria o objeto do novo ticket
+        const novoTicket = {
+          id: "ticket-" + Date.now(),
+          operador: operador,
+          ticket: ticket,
+          fila: fila,
+          obs: obs || "Sem observações.",
+          hora: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        // 2. Pega a lista de tickets que já existem na memória, ou cria uma lista vazia
+        let listaTickets =
+          JSON.parse(localStorage.getItem("fila_tickets")) || [];
+
+        // 3. Adiciona o novo ticket na lista
+        listaTickets.push(novoTicket);
+
+        // 4. Salva a lista atualizada de volta na memória do computador
+        localStorage.setItem("fila_tickets", JSON.stringify(listaTickets));
+
+        alert("Enviado para a Supervisora com sucesso!");
+
+        // Limpa os campos para o próximo envio
+        document.getElementById("ticketId").value = "";
+        document.getElementById("obs").value = "";
+      }
+    </script>
+  </body>
+</html>
