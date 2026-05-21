@@ -1,120 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel da Supervisão</title>
     <style>
-      body {
-        font-family: "Segoe UI", Arial, sans-serif;
-        background-color: #f0f2f5;
-        margin: 0;
-        padding: 20px;
-      }
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-      }
-      h2 {
-        color: #1e6bee;
-        margin: 0;
-      }
-      .grid-tickets {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-      }
-      .card-ticket {
-        background: white;
-        border-left: 5px solid #1e6bee;
-        border-radius: 6px;
-        padding: 15px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        position: relative;
-      }
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: #777;
-        margin-bottom: 10px;
-      }
-      .ticket-info {
-        font-size: 16px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-        background: #f9f9f9;
-        padding: 8px;
-        border-radius: 4px;
-        word-break: break-all;
-      }
-      .btn-copy {
-        background-color: #1e6bee;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 100%;
-        margin-top: 10px;
-      }
-      .btn-copy:hover {
-        background-color: #1552b8;
-      }
-      .btn-done {
-        background-color: #e0e0e0;
-        color: #555;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        position: absolute;
-        top: 15px;
-        right: 15px;
-      }
-      .btn-done:hover {
-        background-color: #d4d4d4;
-      }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { color: #1e6bee; margin: 0; }
+        .grid-tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card-ticket { background: white; border-left: 5px solid #1e6bee; border-radius: 6px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .card-header { display: flex; justify-content: space-between; font-size: 12px; color: #777; margin-bottom: 10px; }
+        .ticket-info { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px; background: #f9f9f9; padding: 8px; border-radius: 4px; word-break: break-all; }
+        .btn-copy { background-color: #1e6bee; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-copy:hover { background-color: #1552b8; }
+        .btn-done { background-color: #e0e0e0; color: #555; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; position: absolute; top: 15px; right: 15px; }
+        .btn-done:hover { background-color: #d4d4d4; }
     </style>
-  </head>
-  <body>
-    <div class="header">
-      <h2>Fila de Triagem da Super</h2>
-      <a
-        href="index.html"
-        style="text-decoration: none; color: #1e6bee; font-weight: bold"
-        >← Sair</a
-      >
-    </div>
+</head>
+<body>
 
-    <div class="grid-tickets" id="listaTickets"></div>
+<div class="header">
+    <h2>Fila de Triagem da Super</h2>
+    <a href="index.html" style="text-decoration: none; color: #1e6bee; font-weight: bold;">← Sair</a>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="grid-tickets" id="listaTickets"></div>
 
-    <script>
-      // Suas chaves oficiais configuradas
-      const SUPABASE_URL = "https://hyblabgajydpwfdctiar.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_yOPlQaFVe467_MnpfXjJow_9bcS9XTt";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-      // Conecta com o Supabase
-      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      let cardsExibidos = new Set();
+<script>
+    // Suas chaves oficiais configuradas
+    const SUPABASE_URL = "https://hyblabgajydpwfdctiar.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_yOPlQaFVe467_MnpfXjJow_9bcS9XTt";
+    
+    // Conecta com o Supabase usando a variável corrigida
+    const bancoSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let cardsExibidos = new Set();
 
-      // Desenha o card do ticket na tela da supervisora
-      function renderizarCard(dados) {
+    // Desenha o card do ticket na tela da supervisora
+    function renderizarCard(dados) {
         if (cardsExibidos.has(dados.id)) return;
 
-        const container = document.getElementById("listaTickets");
-
+        const container = document.getElementById('listaTickets');
+        
         // Remove texto de lista vazia no primeiro ticket
-        if (cardsExibidos.size === 0) container.innerHTML = "";
+        if (cardsExibidos.size === 0) container.innerHTML = '';
 
         const cardHTML = `
             <div class="card-ticket" id="card-${dados.id}">
@@ -129,71 +60,77 @@
                 <button class="btn-done" onclick="removerCard(${dados.id})">Resolvido</button>
             </div>
         `;
-
-        container.insertAdjacentHTML("afterbegin", cardHTML);
+        
+        container.insertAdjacentHTML('afterbegin', cardHTML);
         cardsExibidos.add(dados.id);
-      }
+    }
 
-      // Carrega os tickets existentes na abertura da página
-      async function carregarTicketsIniciais() {
-        const { data, error } = await supabase
-          .from("tickets")
-          .select("*")
-          .order("id", { ascending: true });
+    // Carrega os tickets existentes na abertura da página
+    async function carregarTicketsIniciais() {
+        try {
+            const { data, error } = await bancoSupabase
+                .from('tickets')
+                .select('*')
+                .order('id', { ascending: true });
 
-        if (data && data.length > 0) {
-          data.forEach((ticket) => renderizarCard(ticket));
-        } else {
-          document.getElementById("listaTickets").innerHTML =
-            '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+            if (error) {
+                console.error("Erro ao carregar dados iniciais:", error.message);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                data.forEach(ticket => renderizarCard(ticket));
+            } else {
+                document.getElementById('listaTickets').innerHTML = '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+            }
+        } catch (err) {
+            console.error("Erro inesperado:", err);
         }
-      }
+    }
 
-      // ESCUTA EM TEMPO REAL: Se um operador enviar um ticket, ele brota na tela na mesma hora
-      supabase
-        .channel("schema-db-changes")
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "tickets" },
-          (payload) => {
-            renderizarCard(payload.new);
-          }
-        )
-        .subscribe();
+    // ESCUTA EM TEMPO REAL: Monitora novos inserts na tabela
+    bancoSupabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets' }, payload => {
+          renderizarCard(payload.new);
+      })
+      .subscribe();
 
-      // Copia o ID para a área de transferência com feedback visual de sucesso
-      function copiarTexto(idElemento) {
+    // Copia o ID para a área de transferência com feedback visual
+    function copiarTexto(idElemento) {
         const texto = document.getElementById(idElemento).innerText;
         navigator.clipboard.writeText(texto);
-
-        const botao = document.querySelector(
-          `button[onclick="copiarTexto('${idElemento}')"]`
-        );
+        
+        const botao = document.querySelector(`button[onclick="copiarTexto('${idElemento}')"]`);
         const textoOriginal = botao.innerText;
         botao.innerText = "✓ Copiado!";
         botao.style.backgroundColor = "#25d366";
-
+        
         setTimeout(() => {
-          botao.innerText = textoOriginal;
-          botao.style.backgroundColor = "#1e6bee";
+            botao.innerText = textoOriginal;
+            botao.style.backgroundColor = "#1e6bee";
         }, 1500);
-      }
+    }
 
-      // Deleta o card e remove do banco de dados global
-      async function removerCard(idTicket) {
-        await supabase.from("tickets").delete().eq("id", idTicket);
+    // Deleta o card e remove do banco de dados global
+    async function removerCard(idTicket) {
+        try {
+            await bancoSupabase.from('tickets').delete().eq('id', idTicket);
 
-        document.getElementById(`card-${idTicket}`).remove();
-        cardsExibidos.delete(idTicket);
+            const elemento = document.getElementById(`card-${idTicket}`);
+            if (elemento) elemento.remove();
+            cardsExibidos.delete(idTicket);
 
-        if (cardsExibidos.size === 0) {
-          document.getElementById("listaTickets").innerHTML =
-            '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+            if(cardsExibidos.size === 0) {
+                document.getElementById('listaTickets').innerHTML = '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+            }
+        } catch (err) {
+            console.error("Erro ao remover:", err);
         }
-      }
+    }
 
-      // Inicia o processo de listagem
-      carregarTicketsIniciais();
-    </script>
-  </body>
+    // Inicia o processo de listagem ao abrir a página
+    carregarTicketsIniciais();
+</script>
+</body>
 </html>
