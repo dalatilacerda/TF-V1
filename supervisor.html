@@ -1,136 +1,243 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel da Supervisão</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
-        h2 { color: #1e6bee; margin: 0; }
-        .grid-tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card-ticket { background: white; border-left: 5px solid #1e6bee; border-radius: 6px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .card-header { display: flex; justify-content: space-between; font-size: 12px; color: #777; margin-bottom: 10px; }
-        .ticket-info { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px; background: #f9f9f9; padding: 8px; border-radius: 4px; word-break: break-all; }
-        .btn-copy { background-color: #1e6bee; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-copy:hover { background-color: #1552b8; }
-        .btn-done { background-color: #e0e0e0; color: #555; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; position: absolute; top: 15px; right: 15px; }
-        .btn-done:hover { background-color: #d4d4d4; }
+      /* Fundo abstrato suave */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background: linear-gradient(135deg, #f3f7ff 0%, #fff8fe 100%);
+        margin: 0;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #111;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Header Estilo Glass */
+      .header {
+        width: 100%;
+        max-width: 550px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #111;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0;
+      }
+      .back-link {
+        text-decoration: none;
+        color: #888;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+      }
+      .back-link:hover {
+        color: #111;
+      }
+
+      /* Container da Fila */
+      .fila-container {
+        width: 100%;
+        max-width: 550px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      /* Cartões de Ticket Glassmórficos (inspirados no seu print) */
+      .ticket-linha {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      }
+      .ticket-linha:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+        border-color: #111;
+      }
+
+      .ticket-info-central {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .ticket-numero {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111;
+        letter-spacing: -0.5px;
+      }
+
+      /* Etiqueta de Fila (adaptado da estética Portais do print) */
+      .ticket-fila {
+        font-size: 11px;
+        color: #666;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 4px 10px;
+        border-radius: 6px;
+        width: fit-content;
+      }
+
+      /* Botão Minimalista da Super */
+      .btn-copy {
+        background-color: #ffffff;
+        color: #111111;
+        border: 1px solid #111111;
+        padding: 11px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 120px;
+        text-align: center;
+      }
+      .btn-copy:hover {
+        background-color: #111111;
+        color: #ffffff;
+      }
+
+      #sem-tickets {
+        color: #888;
+        text-align: center;
+        padding: 60px;
+        font-style: italic;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="header">
+      <h2>Fila de Triagem</h2>
+      <a href="index.html" class="back-link">Sair →</a>
+    </div>
 
-<div class="header">
-    <h2>Fila de Triagem da Super</h2>
-    <a href="index.html" style="text-decoration: none; color: #1e6bee; font-weight: bold;">← Sair</a>
-</div>
+    <div class="fila-container" id="listaTickets"></div>
 
-<div class="grid-tickets" id="listaTickets"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://hyblabgajydpwfdctiar.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_yOPlQaFVe467_MnpfXjJow_9bcS9XTt";
+      const bancoSupabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+      let cardsExibidos = new Set();
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-    // Suas chaves oficiais configuradas
-    const SUPABASE_URL = "https://hyblabgajydpwfdctiar.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_yOPlQaFVe467_MnpfXjJow_9bcS9XTt";
-    
-    // Conecta com o Supabase usando a variável corrigida
-    const bancoSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let cardsExibidos = new Set();
-
-    // Desenha o card do ticket na tela da supervisora
-    function renderizarCard(dados) {
+      function renderizarLinhaTicket(dados) {
         if (cardsExibidos.has(dados.id)) return;
 
-        const container = document.getElementById('listaTickets');
-        
-        // Remove texto de lista vazia no primeiro ticket
-        if (cardsExibidos.size === 0) container.innerHTML = '';
+        const container = document.getElementById("listaTickets");
+        if (cardsExibidos.size === 0) container.innerHTML = "";
 
-        const cardHTML = `
-            <div class="card-ticket" id="card-${dados.id}">
-                <div class="card-header">
-                    <span>De: <b>${dados.operador}</b></span>
-                    <span>${dados.hora}</span>
+        const linhaHTML = `
+            <div class="ticket-linha" id="ticket-${dados.id}">
+                <div class="ticket-info-central">
+                    <span class="ticket-numero" id="text-num-${dados.id}">${dados.ticket}</span>
+                    <span class="ticket-fila" id="text-fila-${dados.id}">${dados.fila}</span>
                 </div>
-                <div style="margin-bottom: 5px;">Para Fila: <span style="background: #ffe600; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">${dados.fila}</span></div>
-                <div class="ticket-info" id="text-${dados.id}">${dados.ticket}</div>
-                <div style="font-size: 13px; color:#555;"><i>"${dados.obs}"</i></div>
-                <button class="btn-copy" onclick="copiarTexto('text-${dados.id}')">Copiar ID</button>
-                <button class="btn-done" onclick="removerCard(${dados.id})">Resolvido</button>
+                <button class="btn-copy" onclick="tratarCopiarEConcluir('${dados.id}')">Copiar Dados</button>
             </div>
         `;
-        
-        container.insertAdjacentHTML('afterbegin', cardHTML);
+
+        // Adiciona novos tickets no final da fila (ordem de chegada)
+        container.insertAdjacentHTML("beforeend", linhaHTML);
         cardsExibidos.add(dados.id);
-    }
+      }
 
-    // Carrega os tickets existentes na abertura da página
-    async function carregarTicketsIniciais() {
+      async function carregarFilaInicial() {
         try {
-            const { data, error } = await bancoSupabase
-                .from('tickets')
-                .select('*')
-                .order('id', { ascending: true });
+          const { data, error } = await bancoSupabase
+            .from("tickets")
+            .select("*")
+            .order("id", { ascending: true });
 
-            if (error) {
-                console.error("Erro ao carregar dados iniciais:", error.message);
-                return;
-            }
-
-            if (data && data.length > 0) {
-                data.forEach(ticket => renderizarCard(ticket));
-            } else {
-                document.getElementById('listaTickets').innerHTML = '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
-            }
+          if (data && data.length > 0) {
+            data.forEach((ticket) => renderizarLinhaTicket(ticket));
+          } else {
+            mostrarMensagemVazia();
+          }
         } catch (err) {
-            console.error("Erro inesperado:", err);
+          console.error(err);
         }
-    }
+      }
 
-    // ESCUTA EM TEMPO REAL: Monitora novos inserts na tabela
-    bancoSupabase
-      .channel('schema-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets' }, payload => {
-          renderizarCard(payload.new);
-      })
-      .subscribe();
+      // Tempo Real Integrado
+      bancoSupabase
+        .channel("schema-db-changes")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "tickets" },
+          (payload) => {
+            renderizarLinhaTicket(payload.new);
+          }
+        )
+        .subscribe();
 
-    // Copia o ID para a área de transferência com feedback visual
-    function copiarTexto(idElemento) {
-        const texto = document.getElementById(idElemento).innerText;
-        navigator.clipboard.writeText(texto);
-        
-        const botao = document.querySelector(`button[onclick="copiarTexto('${idElemento}')"]`);
-        const textoOriginal = botao.innerText;
-        botao.innerText = "✓ Copiado!";
-        botao.style.backgroundColor = "#25d366";
-        
-        setTimeout(() => {
-            botao.innerText = textoOriginal;
-            botao.style.backgroundColor = "#1e6bee";
-        }, 1500);
-    }
+      async function tratarCopiarEConcluir(idTicket) {
+        const numeroTicket = document.getElementById(
+          `text-num-${idTicket}`
+        ).innerText;
+        const nomeFila = document.getElementById(
+          `text-fila-${idTicket}`
+        ).innerText;
 
-    // Deleta o card e remove do banco de dados global
-    async function removerCard(idTicket) {
-        try {
-            await bancoSupabase.from('tickets').delete().eq('id', idTicket);
+        const textoParaCopiar = `Ticket: ${numeroTicket} | Fila: ${nomeFila}`;
+        navigator.clipboard.writeText(textoParaCopiar);
 
-            const elemento = document.getElementById(`card-${idTicket}`);
-            if (elemento) elemento.remove();
-            cardsExibidos.delete(idTicket);
+        const botao = document.querySelector(`#ticket-${idTicket} .btn-copy`);
+        botao.innerText = "Copiado";
+        botao.style.backgroundColor = "#111111";
+        botao.style.color = "#ffffff";
 
-            if(cardsExibidos.size === 0) {
-                document.getElementById('listaTickets').innerHTML = '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
-            }
-        } catch (err) {
-            console.error("Erro ao remover:", err);
-        }
-    }
+        setTimeout(async () => {
+          await bancoSupabase.from("tickets").delete().eq("id", idTicket);
 
-    // Inicia o processo de listagem ao abrir a página
-    carregarTicketsIniciais();
-</script>
-</body>
+          const elemento = document.getElementById(`ticket-${idTicket}`);
+          if (elemento) elemento.remove();
+          cardsExibidos.delete(idTicket);
+
+          if (cardsExibidos.size === 0) {
+            mostrarMensagemVazia();
+          }
+        }, 300);
+      }
+
+      function mostrarMensagemVazia() {
+        document.getElementById("listaTickets").innerHTML =
+          '<p id="sem-tickets">Fila vazia.</p>';
+      }
+
+      carregarFilaInicial();
+    </script>
+  </body>
 </html>
