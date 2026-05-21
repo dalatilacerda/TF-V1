@@ -94,95 +94,78 @@
       >
     </div>
 
-    <!-- Onde os cards vão aparecer -->
-    <div class="grid-tickets" id="listaTickets">
-      <!-- Exemplo de como vai ficar o card na tela -->
-      <div class="card-ticket" id="exemplo-1">
-        <div class="card-header">
-          <span>De: <b>João (Operador)</b></span>
-          <span>10:24</span>
-        </div>
-        <div style="margin-bottom: 5px">
-          Para Fila:
-          <span
-            style="
-              background: #ffe600;
-              padding: 2px 6px;
-              border-radius: 4px;
-              font-weight: bold;
-              font-size: 12px;
-            "
-            >Financeiro</span
-          >
-        </div>
-        <div class="ticket-info" id="text-exemplo-1">
-          123456789@wa.gw.msging.net
-        </div>
-        <div style="font-size: 13px; color: #555">
-          <i>"Cliente está bravo querendo estorno."</i>
-        </div>
-        <button class="btn-copy" onclick="copiarTexto('text-exemplo-1')">
-          Copiar ID
-        </button>
-        <button class="btn-done" onclick="removerCard('exemplo-1')">
-          Resolvido
-        </button>
-      </div>
-    </div>
+    <div class="grid-tickets" id="listaTickets"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-      // Guarda os IDs dos cards que já estão na tela para não duplicar
+      // Suas chaves oficiais configuradas
+      const SUPABASE_URL = "https://hyblabgajydpwfdctiar.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_yOPlQaFVe467_MnpfXjJow_9bcS9XTt";
+
+      // Conecta com o Supabase
+      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       let cardsExibidos = new Set();
 
-      function atualizarPainel() {
-        // 1. Pega a lista de tickets salvos na memória do computador
-        const listaTickets =
-          JSON.parse(localStorage.getItem("fila_tickets")) || [];
+      // Desenha o card do ticket na tela da supervisora
+      function renderizarCard(dados) {
+        if (cardsExibidos.has(dados.id)) return;
+
         const container = document.getElementById("listaTickets");
 
-        // Se a lista estiver vazia e o painel estiver limpo, remove o exemplo antigo
-        if (listaTickets.length === 0 && cardsExibidos.size === 0) {
-          container.innerHTML =
-            '<p style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
-          return;
-        }
+        // Remove texto de lista vazia no primeiro ticket
+        if (cardsExibidos.size === 0) container.innerHTML = "";
 
-        // Se for a primeira vez que entra algo real, limpa a mensagem de vazio/exemplo
-        if (listaTickets.length > 0 && cardsExibidos.size === 0) {
-          container.innerHTML = "";
-        }
+        const cardHTML = `
+            <div class="card-ticket" id="card-${dados.id}">
+                <div class="card-header">
+                    <span>De: <b>${dados.operador}</b></span>
+                    <span>${dados.hora}</span>
+                </div>
+                <div style="margin-bottom: 5px;">Para Fila: <span style="background: #ffe600; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">${dados.fila}</span></div>
+                <div class="ticket-info" id="text-${dados.id}">${dados.ticket}</div>
+                <div style="font-size: 13px; color:#555;"><i>"${dados.obs}"</i></div>
+                <button class="btn-copy" onclick="copiarTexto('text-${dados.id}')">Copiar ID</button>
+                <button class="btn-done" onclick="removerCard(${dados.id})">Resolvido</button>
+            </div>
+        `;
 
-        // 2. Passa por cada ticket da memória e renderiza na tela (se já não estiver lá)
-        listaTickets.forEach((dados) => {
-          if (!cardsExibidos.has(dados.id)) {
-            // Cria a estrutura do card em HTML puro
-            const cardHTML = `
-                        <div class="card-ticket" id="${dados.id}">
-                            <div class="card-header">
-                                <span>De: <b>${dados.operador}</b></span>
-                                <span>${dados.hora}</span>
-                            </div>
-                            <div style="margin-bottom: 5px;">Para Fila: <span style="background: #ffe600; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">${dados.fila}</span></div>
-                            <div class="ticket-info" id="text-${dados.id}">${dados.ticket}</div>
-                            <div style="font-size: 13px; color:#555;"><i>"${dados.obs}"</i></div>
-                            <button class="btn-copy" onclick="copiarTexto('text-${dados.id}')">Copiar ID</button>
-                            <button class="btn-done" onclick="removerCard('${dados.id}')">Resolvido</button>
-                        </div>
-                    `;
-
-            // Adiciona o card no topo do painel da super
-            container.insertAdjacentHTML("afterbegin", cardHTML);
-            cardsExibidos.add(dados.id);
-          }
-        });
+        container.insertAdjacentHTML("afterbegin", cardHTML);
+        cardsExibidos.add(dados.id);
       }
 
-      // Função para copiar o texto com 1 clique
+      // Carrega os tickets existentes na abertura da página
+      async function carregarTicketsIniciais() {
+        const { data, error } = await supabase
+          .from("tickets")
+          .select("*")
+          .order("id", { ascending: true });
+
+        if (data && data.length > 0) {
+          data.forEach((ticket) => renderizarCard(ticket));
+        } else {
+          document.getElementById("listaTickets").innerHTML =
+            '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+        }
+      }
+
+      // ESCUTA EM TEMPO REAL: Se um operador enviar um ticket, ele brota na tela na mesma hora
+      supabase
+        .channel("schema-db-changes")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "tickets" },
+          (payload) => {
+            renderizarCard(payload.new);
+          }
+        )
+        .subscribe();
+
+      // Copia o ID para a área de transferência com feedback visual de sucesso
       function copiarTexto(idElemento) {
         const texto = document.getElementById(idElemento).innerText;
         navigator.clipboard.writeText(texto);
 
-        // Altera temporariamente o texto do botão para dar um feedback visual de sucesso
         const botao = document.querySelector(
           `button[onclick="copiarTexto('${idElemento}')"]`
         );
@@ -196,24 +179,21 @@
         }, 1500);
       }
 
-      // Função para quando a supervisora terminar a transferência
-      function removerCard(idCard) {
-        // Remove visualmente da tela
-        document.getElementById(idCard).remove();
-        cardsExibidos.delete(idCard);
+      // Deleta o card e remove do banco de dados global
+      async function removerCard(idTicket) {
+        await supabase.from("tickets").delete().eq("id", idTicket);
 
-        // Remove do banco de dados (localStorage) para sumir de vez
-        let listaTickets =
-          JSON.parse(localStorage.getItem("fila_tickets")) || [];
-        listaTickets = listaTickets.filter((t) => t.id !== idCard);
-        localStorage.setItem("fila_tickets", JSON.stringify(listaTickets));
+        document.getElementById(`card-${idTicket}`).remove();
+        cardsExibidos.delete(idTicket);
+
+        if (cardsExibidos.size === 0) {
+          document.getElementById("listaTickets").innerHTML =
+            '<p id="sem-tickets" style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+        }
       }
 
-      // [O SEGREDO DO TEMPO REAL]: Fica checando a memória do PC a cada 1 segundo (1000 milissegundos)
-      setInterval(atualizarPainel, 1000);
-
-      // Executa uma vez logo ao abrir a página
-      atualizarPainel();
+      // Inicia o processo de listagem
+      carregarTicketsIniciais();
     </script>
   </body>
 </html>
