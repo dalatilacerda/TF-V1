@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel da Supervisão</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      h2 {
+        color: #1e6bee;
+        margin: 0;
+      }
+      .grid-tickets {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .card-ticket {
+        background: white;
+        border-left: 5px solid #1e6bee;
+        border-radius: 6px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        position: relative;
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 10px;
+      }
+      .ticket-info {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+        background: #f9f9f9;
+        padding: 8px;
+        border-radius: 4px;
+        word-break: break-all;
+      }
+      .btn-copy {
+        background-color: #1e6bee;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 10px;
+      }
+      .btn-copy:hover {
+        background-color: #1552b8;
+      }
+      .btn-done {
+        background-color: #e0e0e0;
+        color: #555;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+      }
+      .btn-done:hover {
+        background-color: #d4d4d4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h2>Fila de Triagem da Super</h2>
+      <a
+        href="index.html"
+        style="text-decoration: none; color: #1e6bee; font-weight: bold"
+        >← Sair</a
+      >
+    </div>
+
+    <!-- Onde os cards vão aparecer -->
+    <div class="grid-tickets" id="listaTickets">
+      <!-- Exemplo de como vai ficar o card na tela -->
+      <div class="card-ticket" id="exemplo-1">
+        <div class="card-header">
+          <span>De: <b>João (Operador)</b></span>
+          <span>10:24</span>
+        </div>
+        <div style="margin-bottom: 5px">
+          Para Fila:
+          <span
+            style="
+              background: #ffe600;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 12px;
+            "
+            >Financeiro</span
+          >
+        </div>
+        <div class="ticket-info" id="text-exemplo-1">
+          123456789@wa.gw.msging.net
+        </div>
+        <div style="font-size: 13px; color: #555">
+          <i>"Cliente está bravo querendo estorno."</i>
+        </div>
+        <button class="btn-copy" onclick="copiarTexto('text-exemplo-1')">
+          Copiar ID
+        </button>
+        <button class="btn-done" onclick="removerCard('exemplo-1')">
+          Resolvido
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Guarda os IDs dos cards que já estão na tela para não duplicar
+      let cardsExibidos = new Set();
+
+      function atualizarPainel() {
+        // 1. Pega a lista de tickets salvos na memória do computador
+        const listaTickets =
+          JSON.parse(localStorage.getItem("fila_tickets")) || [];
+        const container = document.getElementById("listaTickets");
+
+        // Se a lista estiver vazia e o painel estiver limpo, remove o exemplo antigo
+        if (listaTickets.length === 0 && cardsExibidos.size === 0) {
+          container.innerHTML =
+            '<p style="color: #777; text-align: center; grid-column: 1/-1;">Nenhum ticket na fila no momento.</p>';
+          return;
+        }
+
+        // Se for a primeira vez que entra algo real, limpa a mensagem de vazio/exemplo
+        if (listaTickets.length > 0 && cardsExibidos.size === 0) {
+          container.innerHTML = "";
+        }
+
+        // 2. Passa por cada ticket da memória e renderiza na tela (se já não estiver lá)
+        listaTickets.forEach((dados) => {
+          if (!cardsExibidos.has(dados.id)) {
+            // Cria a estrutura do card em HTML puro
+            const cardHTML = `
+                        <div class="card-ticket" id="${dados.id}">
+                            <div class="card-header">
+                                <span>De: <b>${dados.operador}</b></span>
+                                <span>${dados.hora}</span>
+                            </div>
+                            <div style="margin-bottom: 5px;">Para Fila: <span style="background: #ffe600; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;">${dados.fila}</span></div>
+                            <div class="ticket-info" id="text-${dados.id}">${dados.ticket}</div>
+                            <div style="font-size: 13px; color:#555;"><i>"${dados.obs}"</i></div>
+                            <button class="btn-copy" onclick="copiarTexto('text-${dados.id}')">Copiar ID</button>
+                            <button class="btn-done" onclick="removerCard('${dados.id}')">Resolvido</button>
+                        </div>
+                    `;
+
+            // Adiciona o card no topo do painel da super
+            container.insertAdjacentHTML("afterbegin", cardHTML);
+            cardsExibidos.add(dados.id);
+          }
+        });
+      }
+
+      // Função para copiar o texto com 1 clique
+      function copiarTexto(idElemento) {
+        const texto = document.getElementById(idElemento).innerText;
+        navigator.clipboard.writeText(texto);
+
+        // Altera temporariamente o texto do botão para dar um feedback visual de sucesso
+        const botao = document.querySelector(
+          `button[onclick="copiarTexto('${idElemento}')"]`
+        );
+        const textoOriginal = botao.innerText;
+        botao.innerText = "✓ Copiado!";
+        botao.style.backgroundColor = "#25d366";
+
+        setTimeout(() => {
+          botao.innerText = textoOriginal;
+          botao.style.backgroundColor = "#1e6bee";
+        }, 1500);
+      }
+
+      // Função para quando a supervisora terminar a transferência
+      function removerCard(idCard) {
+        // Remove visualmente da tela
+        document.getElementById(idCard).remove();
+        cardsExibidos.delete(idCard);
+
+        // Remove do banco de dados (localStorage) para sumir de vez
+        let listaTickets =
+          JSON.parse(localStorage.getItem("fila_tickets")) || [];
+        listaTickets = listaTickets.filter((t) => t.id !== idCard);
+        localStorage.setItem("fila_tickets", JSON.stringify(listaTickets));
+      }
+
+      // [O SEGREDO DO TEMPO REAL]: Fica checando a memória do PC a cada 1 segundo (1000 milissegundos)
+      setInterval(atualizarPainel, 1000);
+
+      // Executa uma vez logo ao abrir a página
+      atualizarPainel();
+    </script>
+  </body>
+</html>
