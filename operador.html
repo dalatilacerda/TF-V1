@@ -141,7 +141,7 @@
           id="ticketId"
           inputmode="numeric"
           pattern="[0-9]*"
-          placeholder="123456"
+          placeholder="1234567"
           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
         />
       </div>
@@ -149,11 +149,24 @@
       <label for="filaDestino">Fila de Destino</label>
       <input list="filas" id="filaDestino" placeholder="Buscar fila..." />
       <datalist id="filas">
+        <option value="Reabertura"></option>
+        <option value="Estácio Graduação - Transbordo SM"></option>
+        <option value="Estácio Graduação - Funil Ativo"></option>
+        <option value="Estácio Graduação - Funil Receptivo"></option>
+        <option value="Estácio Graduação - Leads Ativo"></option>
         <option value="CT - Funil Receptivo"></option>
-        <option value="Financeiro"></option>
-        <option value="Comercial"></option>
-        <option value="Atendimento Geral"></option>
-        <option value="Ouvidoria"></option>
+        <option value="CT - Lead Receptivo"></option>
+        <option value="CTW - Estácio Graduação"></option>
+        <option value="CTW - Pós Estácio"></option>
+        <option value="Default"></option>
+        <option value="Estácio Funil Receptivo"></option>
+        <option value="Estácio Graduação - site"></option>
+        <option value="Estácio Graduação - Leads Receptivo"></option>
+        <option value="Estácio Pós Graduação - Funil Ativo"></option>
+        <option value="Estácio Pós Graduação - Funil Receptivo"></option>
+        <option value="Estácio Pós Graduação - Leads Ativo"></option>
+        <option value="Estácio Pós Graduação - Leads Receptivo"></option>
+        <option value="Rota de Sucesso"></option>
       </datalist>
 
       <button type="button" onclick="enviarParaSuper()">Enviar Ticket</button>
@@ -176,7 +189,7 @@
           const fila = document.getElementById("filaDestino").value.trim();
 
           // Validação: verifica se a fila foi escolhida e se o ticket tem EXATAMENTE 6 dígitos
-          if (ticketNumero.length !== 6 || !fila) {
+          if (ticketNumero.length !== 7 || !fila) {
             alert(
               "Por favor, selecione a fila e insira um número de ticket válido com exatamente 6 dígitos!"
             );
