@@ -50,29 +50,28 @@
         color: #666;
       }
 
-      /* Input do Ticket Estilo Clean */
+      /* Campo Textarea adaptado para múltiplos tickets com # */
       .ticket-input-container {
         display: flex;
-        align-items: center;
+        flex-direction: column;
         margin-top: 8px;
         border-bottom: 1px solid #111;
         background: transparent;
       }
-      .ticket-prefix {
-        padding: 8px 0 8px 4px;
-        color: #111;
-        font-weight: 500;
-        font-size: 16px;
-        user-select: none;
-      }
-      .ticket-input-container input {
+      .ticket-input-container textarea {
         border: none;
         width: 100%;
+        height: 80px;
         padding: 8px 4px;
-        font-size: 16px;
+        font-size: 15px;
+        font-family: inherit;
         outline: none;
         background: transparent;
         color: #111;
+        resize: none;
+      }
+      .ticket-input-container textarea::placeholder {
+        color: #aaa;
       }
 
       /* Input da Fila Estilo Clean */
@@ -113,6 +112,12 @@
         color: #111111;
       }
 
+      button:disabled {
+        background-color: #666;
+        border-color: #666;
+        cursor: not-allowed;
+      }
+
       .back-link {
         display: block;
         text-align: center;
@@ -127,23 +132,42 @@
       .back-link:hover {
         color: #111;
       }
+
+      /* Balão de notificação moderna (Toast) */
+      .toast-notification {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: #111;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 10000;
+        white-space: nowrap;
+      }
+      .toast-notification.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast-error {
+        background: #e63946;
+      }
     </style>
   </head>
   <body>
     <div class="form-container">
       <h3>Operador</h3>
 
-      <label for="ticketId">Número do Ticket</label>
+      <label for="ticketId">Tickets</label>
       <div class="ticket-input-container">
-        <span class="ticket-prefix">#</span>
-        <input
-          type="text"
+        <textarea
           id="ticketId"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          placeholder="1234567"
-          oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-        />
+          placeholder="Cole aqui os tickets acompanhados de # (Ex: #1234567 #8901234...)"
+        ></textarea>
       </div>
 
       <label for="filaDestino">Fila de Destino</label>
@@ -169,10 +193,14 @@
         <option value="Rota de Sucesso"></option>
       </datalist>
 
-      <button type="button" onclick="enviarParaSuper()">Enviar Ticket</button>
+      <button type="button" id="submitBtn" onclick="enviarParaSuper()">
+        Enviar Tickets
+      </button>
 
       <a href="index.html" class="back-link">← Voltar</a>
     </div>
+
+    <div id="toast" class="toast-notification"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -183,43 +211,79 @@
         SUPABASE_KEY
       );
 
+      function mostrarAviso(mensagem, ehErro = false) {
+        const toast = document.getElementById("toast");
+        toast.textContent = mensaje = mensagem;
+        if (ehErro) {
+          toast.classList.add("toast-error");
+        } else {
+          toast.classList.remove("toast-error");
+        }
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
       async function enviarParaSuper() {
+        const btn = document.getElementById("submitBtn");
         try {
-          const ticketNumero = document.getElementById("ticketId").value.trim();
+          const textoBruto = document.getElementById("ticketId").value;
           const fila = document.getElementById("filaDestino").value.trim();
 
-          // Validação: verifica se a fila foi escolhida e se o ticket tem EXATAMENTE 6 dígitos
-          if (ticketNumero.length !== 7 || !fila) {
-            alert(
-              "Por favor, selecione a fila e insira um número de ticket válido com exatamente 6 dígitos!"
+          // Regex que captura apenas os números de qualquer sequência que contenha dígitos
+          const regexNumeros = /\d+/g;
+          const matches = textoBruto.match(regexNumeros) || [];
+
+          // Limpa duplicados e pega apenas números válidos (geralmente com 7 caracteres com base na validação anterior)
+          const listaTickets = matches
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+
+          if (listaTickets.length === 0 || !fila) {
+            mostrarAviso(
+              "Selecione a fila e insira pelo menos um ticket válido!",
+              true
             );
             return;
           }
 
-          const ticketFormatado = "#" + ticketNumero;
+          btn.disabled = true;
+          btn.textContent = "Enviando Lote...";
 
-          const { error } = await bancoSupabase.from("tickets").insert([
-            {
+          // Cria a lista estruturada de objetos prontos para injeção múltipla no Supabase
+          const registrosParaInserir = listaTickets.map((ticketNumero) => {
+            return {
               operador: "Operador",
-              ticket: ticketFormatado,
+              ticket: "#" + ticketNumero,
               fila: fila,
               obs: "",
               hora: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
-            },
-          ]);
+            };
+          });
+
+          // Envia o array inteiro de uma só vez (Operação Bulk)
+          const { error } = await bancoSupabase
+            .from("tickets")
+            .insert(registrosParaInserir);
 
           if (error) {
-            alert("Erro ao enviar: " + error.message);
+            mostrarAviso("Erro ao enviar: " + error.message, true);
           } else {
-            alert("Enviado com sucesso!");
+            mostrarAviso(
+              `Sucesso! ${listaTickets.length} ticket(s) enviado(s).`
+            );
             document.getElementById("ticketId").value = "";
             document.getElementById("filaDestino").value = "";
           }
         } catch (err) {
-          alert("Erro inesperado: " + err.message);
+          mostrarAviso("Erro inesperado: " + err.message, true);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Enviar Tickets";
         }
       }
     </script>
